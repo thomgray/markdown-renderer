@@ -14,22 +14,24 @@ trait MdRenderer extends StringFormatting with MdCodeColouring {
 
   def render(document: MdDocument, width: Int): AttributedString = {
     val result = document.paragraphs.map(render(_, width))
-    result.reduce(_ + newParagraph + _)
+    if (result.nonEmpty) result.reduce(_ + newParagraph + _) else AttributedString("")
   }
 
   def render(paragraph: MdParagraph, width: Int): AttributedString = paragraph match {
     case string: MdString => renderString(string, width)
-    case code: MdCode => renderCode(code, width)
+    case code: MdCode => render(code, width)
     case list: MdList[MdListItem] => renderList(list, width)
+    case header: MdHeader => renderHeader(header, width)
+    case quote: MdQuote => renderQuote(quote, width)
   }
 
   protected def renderString(mdString: MdString, width: Int): AttributedString = {
-    val stringWithRegularSpacing = mdString.string.replaceAll("\\b {0,1}\n", " ").replaceAll(" +", " ").replaceAll(" \n", "\n")
+    val stringWithRegularSpacing = regularSpacedString(mdString.string)
     val wrapped = wrapStringToWidth(stringWithRegularSpacing, width)
     AttributedString(wrapped)
   }
 
-  protected def renderCode(mdCode: MdCode, width: Int) = {
+  protected def render(mdCode: MdCode, width: Int) = {
     val codeString = colourCode(mdCode.string, mdCode.language)
     drawBoxAround(codeString)
   }
@@ -96,6 +98,15 @@ trait MdRenderer extends StringFormatting with MdCodeColouring {
   private def prefixForCheck(checked: Boolean) = {
     val box = if (checked) "☒" else "☐"
     AttributedString(s"   $box ")
+  }
+
+  val quotePrefix = (AttributedString(" ") << Format(background = Some(AnsiColor.WHITE_B))) + AttributedString(" ")
+
+  protected def renderQuote(mdQuote: MdQuote, length: Int) = {
+    val normalisedString = wrapStringToWidth(regularSpacedString(mdQuote.string), length-2)
+    normalisedString.split("\n").map{ s =>
+      quotePrefix + AttributedString(s)
+    }.reduce(_ + newLine + _)
   }
 
 }

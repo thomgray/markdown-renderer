@@ -61,6 +61,8 @@ class MdParserSpec extends FlatSpec with Matchers with MockitoSugar with BeforeA
         |> accross several lines""".stripMargin
 
     val result = parse(str).paragraphs
+    result.length shouldBe 1
+    result.head shouldBe MdQuote("this is a quote accross several lines")
   }
 
   it should "parse a single bullet list item" in {
@@ -169,7 +171,7 @@ class MdParserSpec extends FlatSpec with Matchers with MockitoSugar with BeforeA
     )
   }
 
-  it should "break paragraphs when there is a double space" in {
+  it should "break paragraphs when there is an empty line" in {
     val str =
       """hello there
         |
@@ -180,6 +182,26 @@ class MdParserSpec extends FlatSpec with Matchers with MockitoSugar with BeforeA
     result.length shouldBe 2
     result(0) shouldBe MdString("hello there")
     result(1) shouldBe MdString("this is another")
+  }
+
+  it should "handle empty strings" in {
+    val string =
+      """
+        |
+        |
+        |
+      """.stripMargin
+    parse(string).paragraphs shouldBe Nil
+  }
+
+  it should "handle empty space before and afer an item" in {
+    parse(
+      """
+        |this is a string
+        |
+      """.stripMargin).paragraphs shouldBe List(
+      MdString("this is a string")
+    )
   }
 
 
@@ -235,6 +257,7 @@ class MdParserSpec extends FlatSpec with Matchers with MockitoSugar with BeforeA
       List("hello there","- inner list"), 2
     )
   }
+
 
 
 }

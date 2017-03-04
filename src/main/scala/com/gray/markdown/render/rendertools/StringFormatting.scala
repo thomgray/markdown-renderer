@@ -9,6 +9,11 @@ trait StringFormatting {
 
   private def wrapRegex(width: Int) = s"""^.{0,${width - 1}}(\\s|_|-|$$)""".r
 
+
+  def regularSpacedString(string: String) =
+    string.replaceAll("\\b {0,1}\n", " ").replaceAll(" +", " ").replaceAll(" \n", "\n")
+
+
   def wrapStringToWidth(string: String, width: Int, wrapPrefix: String = "", wrapSuffix: String = "") = {
     string.split("\n").map(wrapSingleLine(_, width, wrapPrefix, wrapSuffix)).mkString("\n")
   }
