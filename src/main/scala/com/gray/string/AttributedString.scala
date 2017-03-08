@@ -9,6 +9,8 @@ class AttributedString(val string: String, val attributes: AttributeList) extend
 
   def length = string.length
 
+  def newLine = AttributedString("\n")
+
   override def toString: String = {
     var out = ""
     var marker = 0
@@ -62,21 +64,31 @@ class AttributedString(val string: String, val attributes: AttributeList) extend
   def wrapToWidth(width: Int, wrapPrefix: Option[AttributedString] = None, wrapSuffix: Option[AttributedString] = None) = {
     val regex = wrapRegex(width)
     def wrapRecursive(toWrap: AttributedString, wrapTo: Option[AttributedString]): AttributedString = {
-      val lengthOfChunk = regex.findFirstIn(toWrap.string) match {
-        case Some(chunk) => chunk.length
-        case _ => Math.min(width, toWrap.string.length)
+      if (toWrap.length <= width) { // can end here if the string is within the wrap length
+        wrapTo match {
+          case None => toWrap
+          case Some(wrapped) => wrapped.trimTrailing() + newLine + toWrap
+        }
+      } else {
+        val lengthOfChunk = regex.findFirstIn(toWrap.string) match {
+          case Some(chunk) => chunk.length
+          case _ => Math.min(width, toWrap.string.length)
+        }
+
+        val newString = wrapTo match {
+          case Some(toString) =>
+            toString.trimTrailing() +
+              newLine +
+              wrapPrefix.getOrElse(AttributedString("")) +
+              toWrap.subString(end = lengthOfChunk)
+          case None => toWrap.subString(end = lengthOfChunk)
+        }
+
+        val suffix = toWrap.subString(lengthOfChunk)
+        if (suffix.length > 0) wrapRecursive(suffix, Some(newString))
+        else newString
+
       }
-      val newString = wrapTo match {
-        case Some(toString) =>
-          toString.trim +
-          AttributedString("\n") +
-          wrapPrefix.getOrElse(AttributedString("")) +
-          toWrap.subString(end = lengthOfChunk).trim
-        case None => toWrap.subString(end=lengthOfChunk)
-      }
-      val suffix = toWrap.subString(lengthOfChunk)
-      if (suffix.length > 0) wrapRecursive(suffix, Some(newString))
-      else newString
     }
     wrapRecursive(this, None)
   }
@@ -89,10 +101,21 @@ class AttributedString(val string: String, val attributes: AttributeList) extend
   }
 
   def trim = {
-    val prefix = "^\\s*".r.findFirstIn(string).getOrElse("").length
-    val suffix = "\\s*$".r.findFirstIn(string).getOrElse("").length
-    subString(prefix, length-suffix)
+    string.matches("\\s+") match {
+      case true =>
+        subString(end = 0)
+      case _ =>
+        val prefix = "^\\s*".r.findFirstIn(string).getOrElse("").length
+        val suffix = "\\s*$".r.findFirstIn(string).getOrElse("").length
+        subString(prefix, length - suffix)
+    }
   }
+
+  def trimTrailing() = "\\s+$".r.findFirstIn(string) match {
+    case None => this
+    case Some(mtch) => subString(0, length - mtch.length)
+  }
+
 
   def split(regex: String) = {
     val regexProper = regex.r

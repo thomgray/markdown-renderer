@@ -65,6 +65,16 @@ class MdParserSpec extends FlatSpec with Matchers with MockitoSugar with BeforeA
     result.head shouldBe MdQuote("this is a quote accross several lines")
   }
 
+  it should "parse quotes when preceded by blank space" in {
+    val str =
+      """
+        |> this is a quote
+        |""".stripMargin
+    val result = parse(str).paragraphs
+    result.length shouldBe 1
+    result.head shouldBe MdQuote("this is a quote")
+  }
+
   it should "parse a single bullet list item" in {
     val str = """- hello"""
 
@@ -138,6 +148,23 @@ class MdParserSpec extends FlatSpec with Matchers with MockitoSugar with BeforeA
     )
   }
 
+  it should "parse task|check lists" in {
+    val str = """- [ ] one"""
+    parse(str).paragraphs shouldBe List(
+      MdChecktList(MdCheckListItem(MdString("one"), false))
+    )
+  }
+
+  it should "parse a micture of check list items with different check-values" in {
+    val str =
+      """- [ ] one
+        |- [x] two""".stripMargin
+    parse(str).paragraphs shouldBe List(MdChecktList(List(
+      MdCheckListItem(MdString("one"), false),
+      MdCheckListItem(MdString("two"), true)
+    )))
+  }
+
   it should "parse headers" in {
     val str = """# header1"""
 
@@ -209,7 +236,7 @@ class MdParserSpec extends FlatSpec with Matchers with MockitoSugar with BeforeA
     val str = """- hello there"""
     val lines = findListItem(str.split("\n").toList, 0, bulletListItemRegex)
     lines shouldBe Some(
-      List("hello there"), 1
+      (List("hello there"), "- "), 1
     )
   }
 
@@ -220,7 +247,7 @@ class MdParserSpec extends FlatSpec with Matchers with MockitoSugar with BeforeA
 
     val lines = findListItem(str.split("\n").toList, 0, bulletListItemRegex)
     lines shouldBe Some(
-      List("hello there","and this is another line"), 2
+      (List("hello there","and this is another line"), "- "), 2
     )
   }
 
@@ -231,7 +258,7 @@ class MdParserSpec extends FlatSpec with Matchers with MockitoSugar with BeforeA
 
     val lines = findListItem(str.split("\n").toList, 0, bulletListItemRegex)
     lines shouldBe Some(
-      List("hello there","    and this is indented"), 2
+      (List("hello there","    and this is indented"), "- "), 2
     )
   }
 
@@ -243,7 +270,7 @@ class MdParserSpec extends FlatSpec with Matchers with MockitoSugar with BeforeA
 
     val lines = findListItem(str.split("\n").toList, 0, bulletListItemRegex)
     lines shouldBe Some(
-      List("hello there", "", "this is still in the same thing"), 3
+      (List("hello there", "", "this is still in the same thing"), "- "), 3
     )
   }
 
@@ -254,10 +281,8 @@ class MdParserSpec extends FlatSpec with Matchers with MockitoSugar with BeforeA
 
     val lines = findListItem(str.split("\n").toList, 0, bulletListItemRegex)
     lines shouldBe Some(
-      List("hello there","- inner list"), 2
+      (List("hello there","- inner list"), "- "), 2
     )
   }
-
-
 
 }

@@ -47,6 +47,6 @@ object Build extends SbtBuild {
           },
           libraryDependencies ++= dependencies
         )
-  )
+  ).enablePlugins(CucumberPlugin)
 
 }

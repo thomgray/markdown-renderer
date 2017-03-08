@@ -49,7 +49,7 @@ class MdRendererSpec extends FlatSpec with Matchers with MdRenderer with Implici
     actual.string shouldBe expected.string
   }
 
-  it should "noramlise word spacing" in {
+  "renderString" should "noramlise word spacing" in {
     val str = "this is  an    irregularly\nspaced   string"
     val expected = "this is an irregularly spaced string"
 
@@ -69,22 +69,17 @@ class MdRendererSpec extends FlatSpec with Matchers with MdRenderer with Implici
     render(str, 20) shouldBe AttributedString("look at this lovely\nstring, isn't it\nbeautiful")
   }
 
-  it should "put code in a box" in {
-    val str =
-      """def main(args: Array[String]) = {
-        |  println("hello there")
-        |}""".stripMargin
-    val rendered = render(MdCode(str, None), 100)
-    val expected =
-      """┌─────────────────────────────────┐
-        |│def main(args: Array[String]) = {│
-        |│  println("hello there")         │
-        |│}                                │
-        |└─────────────────────────────────┘""".stripMargin
-    rendered.string shouldBe expected
+  it should "apply inline formatting" in {
+    val str = MdString("this is __bold__ and this is _underlined_")
+    val actual = renderString(str, 100)
+    val expected = AttributedString("this is ") +
+      (AttributedString("bold") << BOLD) +
+      AttributedString(" and this is ") +
+      (AttributedString("underlined") << UNDERLINED_FORMAT)
+    expected shouldBe actual
   }
 
-  it should "bullet a list with an indent" in {
+  "renderList" should "bullet a list with an indent" in {
     val list = MdBulletList(List(MdBulletListItem(MdString("one")), MdBulletListItem(MdString("two"))))
     val actual = render(list, 100).string
     actual shouldBe
@@ -177,11 +172,42 @@ class MdRendererSpec extends FlatSpec with Matchers with MdRenderer with Implici
     render(list, 30).string shouldBe expected
   }
 
-  it should "render a quote" in {
+  "renderQuote" should "render a quote" in {
     val quote = MdQuote("hello there, this is a quote, don't you know")
     val expected = (AttributedString(" ") << WHITE_B) + AttributedString(" hello there, this is a quote, don't you know")
     render(quote, 100) shouldBe expected
   }
 
-  
+
+  "renderCode" should "maintain the literal text padding the start, end, top and bottom by a single space" in {
+    val codeString =
+    """|
+       |  def main = {
+       |    this will not compile
+       |  }
+       |""".stripMargin
+    val code = MdCode(codeString, None)
+    val actual = renderCode(code, 30).string
+
+    val expected =
+    """|                              |
+       |                              |
+       |   def main = {               |
+       |     this will not compile    |
+       |   }                          |
+       |                              |
+       |                              |""".stripMargin.replaceAll("\\|", "")
+    actual shouldBe expected
+  }
+
+  it should "colour the background black" in {
+    val code = MdCode("some code", None)
+    val actual = renderCode(code, 20)
+    val expectedStr =
+     """|                    |
+        | some code          |
+        |                    |""".stripMargin.replaceAll("\\|", "")
+    val expected = expectedStr.split("\n").map(AttributedString(_) << BLACK_B).reduce(_+newLine+_)
+    actual shouldBe expected
+  }
 }

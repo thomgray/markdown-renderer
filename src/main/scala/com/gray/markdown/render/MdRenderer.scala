@@ -19,7 +19,7 @@ trait MdRenderer extends StringFormatting with MdCodeColouring {
 
   def render(paragraph: MdParagraph, width: Int): AttributedString = paragraph match {
     case string: MdString => renderString(string, width)
-    case code: MdCode => render(code, width)
+    case code: MdCode => renderCode(code, width)
     case list: MdList[MdListItem] => renderList(list, width)
     case header: MdHeader => renderHeader(header, width)
     case quote: MdQuote => renderQuote(quote, width)
@@ -27,13 +27,13 @@ trait MdRenderer extends StringFormatting with MdCodeColouring {
 
   protected def renderString(mdString: MdString, width: Int): AttributedString = {
     val stringWithRegularSpacing = regularSpacedString(mdString.string)
-    val wrapped = wrapStringToWidth(stringWithRegularSpacing, width)
-    AttributedString(wrapped)
+    val formatted = applyMdInlineFormatting(AttributedString(stringWithRegularSpacing))
+    formatted.wrapToWidth(width)
   }
 
-  protected def render(mdCode: MdCode, width: Int) = {
-    val codeString = colourCode(mdCode.string, mdCode.language)
-    drawBoxAround(codeString)
+  protected def renderCode(mdCode: MdCode, width: Int) = {
+    val codeString = colourCode(mdCode.string, mdCode.language).wrapToWidth(width-2)
+    colourBackground(codeString, width)
   }
 
   protected def renderHeader(header: MdHeader, width: Int) = {
@@ -89,7 +89,7 @@ trait MdRenderer extends StringFormatting with MdCodeColouring {
     val numberString = number.toString
     val beforeString = if (numberString.length > 3) {
       numberString
-    }else {
+    } else {
       "".padTo(3-numberString.length, ' ') + numberString
     }
     (AttributedString(s"$beforeString") << Format(foreground = Some(AnsiColor.BLUE))) + AttributedString(". ")

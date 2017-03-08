@@ -17,6 +17,8 @@ trait MdRegexes {
   val numberedListItemRegex = "^( {0,3}\\d+\\. )(.*)".r
   val checkListItemRegex = "^( {0,3}(?:-|\\+|\\*) +\\[(?:x| )\\] )(.*)$".r
 
+  val checkListItemPrefix = "^ {0,3}(?:-|\\+|\\*) ".r
+
   val listItemPrefixRegex = "^ *(((-|\\+|\\*)( {1,4}(\\[( |x)\\]))?)|(\\d+\\.)) {1,}".r
   val bulletOrNumberPrefix = "^ *((\\d+.)|(-|\\+|\\*)) {1,}".r
 
@@ -26,6 +28,7 @@ trait MdRegexes {
 
   ///
   val blockQuoteRegex = "^ {0,3}> {0,4}\\S.*".r
+  val continuingBlockQuoteRegex = "^ {0,3}(> {0,4})?\\S.*".r
 
   /**
     * Anything matching italic will match within bold but not visa versa, so be sure to allow for this by handling bold replacements first!
@@ -56,6 +59,7 @@ trait MdRegexes {
   val emptyLineRegex = "^\\s*$".r
 
   val nonIndentedAnthingRegex = "^ {0,3}.*$".r
+  val nonIndentedSomething = "^ {0,3}\\S.*$".r
 
   val urlRegex = "\\b(https?:\\/\\/)?(www\\.)?[A-Za-z0-9\\-._~:\\/?#\\[\\]@!$&'()*+,;=`.%]+\\.([a-z]{2}|com|net|org|edu|int|gov|mil)(\\/[A-Za-z0-9\\-._~:\\/?#\\[\\]@!$&'()*+,;=`.%]*)?\\b".r
 

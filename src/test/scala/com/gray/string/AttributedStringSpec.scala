@@ -11,6 +11,7 @@ class AttributedStringSpec extends FlatSpec with Matchers with AnsiColor with Im
   val unformattedString = AttributedString("unformatted string")
   val redString = AttributedString("red string", RED)
 
+  def %(string: String) = AttributedString(string)
 
   "toString" should "write a regular string when the string has no format" in {
     unformattedString.toString shouldBe "unformatted string"
@@ -92,5 +93,4 @@ class AttributedStringSpec extends FlatSpec with Matchers with AnsiColor with Im
   }
 
 
-  def %(string: String) = AttributedString(string)
 }

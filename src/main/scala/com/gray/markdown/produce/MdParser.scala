@@ -9,6 +9,7 @@ import scala.util.matching.Regex
 trait MdParser extends MdRegexes with MdFactory with MapOne {
 
   def parse(string: String): MdDocument = {
+
     val lines = string.split("(\n|\r)").toList
     var mark = 0
     val paragraphs = mutable.ListBuffer[MdParagraph]()
@@ -63,8 +64,8 @@ trait MdParser extends MdRegexes with MdFactory with MapOne {
     } else None
   }
 
-  def findQuoteBlock(lines: List[String], marker: Int) = blockQuoteRegex.findFirstIn(lines(marker)) flatMap { mtch =>
-    val end = lines.indexWhere(string => blockQuoteRegex.findFirstIn(string).isEmpty) match {
+  def findQuoteBlock(lines: List[String], marker: Int) = blockQuoteRegex.findFirstIn(lines(marker)) flatMap { _ =>
+    val end = lines.indexWhere(string => continuingBlockQuoteRegex.findFirstIn(string).isEmpty, marker+1) match {
       case -1 => lines.length
       case other => other
     }
@@ -90,16 +91,16 @@ trait MdParser extends MdRegexes with MdFactory with MapOne {
         if (marker2 < lines.length) findListItem(lines, marker2, regex) map (_.swap)
         else None
       }
-      val paragraphs = itemLines.map(l => parse(l.mkString("\n")).paragraphs)
+      val paragraphs = itemLines.map(l => (parse(l._1.mkString("\n")).paragraphs, l._2))
       val result = regex match {
         case `bulletListItemRegex` =>
-          val items = paragraphs.map(MdBulletListItem).toList
-          MdBulletList(items) -> lastIndex
+          val items = paragraphs.map(l => MdBulletListItem(l._1))
+          MdBulletList(items.toList) -> lastIndex
         case `numberedListItemRegex` =>
-          val items = paragraphs.map(MdNumberListItem)
+          val items = paragraphs.map(l => MdNumberListItem(l._1))
           MdNumberList(items.toList) -> lastIndex
         case `checkListItemRegex` =>
-          val items = paragraphs.map(MdCheckListItem(_, mtch.group(1).contains("x")))
+          val items = paragraphs.map(l => MdCheckListItem(l._1, l._2.contains("x")))
           MdChecktList(items.toList) -> lastIndex
       }
       result
@@ -108,7 +109,11 @@ trait MdParser extends MdRegexes with MdFactory with MapOne {
 
   def findListItem(lines: List[String], marker: Int, regex: Regex, prefixLength: Int = 0) = regex.findFirstMatchIn(lines(marker)) flatMap { mtch =>
     val prefix = mtch.group(1)
-    val blankPrefix = (0 until prefix.length).map(s => " ").mkString
+    val prefixLength = regex match {
+      case `checkListItemRegex` => checkListItemPrefix.findFirstIn(prefix).getOrElse("").length
+      case _ => prefix.length
+    }
+    val blankPrefix = (0 until prefixLength).map(s => " ").mkString
     val body = mtch.group(2)
     var lastLineBlank = false
     val lastLine = lines.indexWhere(line => {
@@ -122,7 +127,7 @@ trait MdParser extends MdRegexes with MdFactory with MapOne {
     }
     val itemLines = body +: lines.slice(marker + 1, lastLine)
       .map(_.stripPrefix(blankPrefix))
-    Some(itemLines, lastLine)
+    Some((itemLines, prefix), lastLine)
   }
 
   def findHeader(lines: List[String], marker: Int) = headerRegex.findFirstMatchIn(lines(marker)) map { mtch =>
