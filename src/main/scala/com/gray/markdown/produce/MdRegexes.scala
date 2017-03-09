@@ -26,7 +26,6 @@ trait MdRegexes {
   val MdLinkWithReferenceRegex = "(\\[[^\\]]+?\\])( {0,1}\\[[^\\]\\)]+?\\])?".r
   val MdLinkRefRegex = "^ {0,3}\\[([^\\]]+?)\\] *: *(\\S+) *$".r
 
-  ///
   val blockQuoteRegex = "^ {0,3}> {0,4}\\S.*".r
   val continuingBlockQuoteRegex = "^ {0,3}(> {0,4})?\\S.*".r
 
@@ -61,10 +60,7 @@ trait MdRegexes {
   val nonIndentedAnthingRegex = "^ {0,3}.*$".r
   val nonIndentedSomething = "^ {0,3}\\S.*$".r
 
-  val urlRegex = "\\b(https?:\\/\\/)?(www\\.)?[A-Za-z0-9\\-._~:\\/?#\\[\\]@!$&'()*+,;=`.%]+\\.([a-z]{2}|com|net|org|edu|int|gov|mil)(\\/[A-Za-z0-9\\-._~:\\/?#\\[\\]@!$&'()*+,;=`.%]*)?\\b".r
-
-  protected val urlChars: Regex = "[A-Za-z0-9\\-._~:/\\?#\\[\\]@!$&'()*+,;=`.%]".r
-//  val urlRegex = s"""\b(https?://|www\.)?$permissibleUrlCharacters+\.([a-z]{2}|com|net|org|edu|int|gov|mil)($permissibleUrlCharacters*)\b""".r
+  val urlRegex = """\b(https?://|www\\.)?\S+\.[a-z]{2,3}(\S*)\b""".r
 
   def anyMatchingRegex(string: String, regexes: Seq[Regex]) = regexes.find(_.findFirstIn(string).isDefined)
 

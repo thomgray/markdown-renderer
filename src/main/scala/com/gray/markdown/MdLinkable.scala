@@ -18,7 +18,6 @@ trait MdLinkable {
       }
     }
     extractLinksRecursive(string)
-    ???
   }
 
 }

@@ -6,18 +6,13 @@ abstract class MdParagraph
 
 case object MdBreak extends MdParagraph
 
-case class MdHeader(mdString: MdString, value: Int) extends MdParagraph
+case class MdHeader(mdString: MdString, value: Int) extends MdParagraph with MdLinkable {
+  override def links(linkContext: List[MdLink]): List[MdLink] = mdString.links(linkContext)
+}
 
-case class MdString(string: String) extends MdParagraph
-
-
-//case class MdHeader(mdString: MdString, value: Int) extends MdParagraph with MdLinkable {
-//  override def links(linkContext: List[MdLink]): List[MdLink] = mdString.links(linkContext)
-//}
-//
-//case class MdString(string: String) extends MdParagraph with MdLinkable {
-//  override def links(linkContext: List[MdLink]): List[MdLink] = extractLinksWithString(string, linkContext)
-//}
+case class MdString(string: String) extends MdParagraph with MdLinkable {
+  override def links(linkContext: List[MdLink]): List[MdLink] = extractLinksWithString(string, linkContext)
+}
 
 case class MdQuote(string: String) extends MdParagraph
 
