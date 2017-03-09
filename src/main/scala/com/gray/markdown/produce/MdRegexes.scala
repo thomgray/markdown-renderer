@@ -63,6 +63,8 @@ trait MdRegexes {
 
   val urlRegex = "\\b(https?:\\/\\/)?(www\\.)?[A-Za-z0-9\\-._~:\\/?#\\[\\]@!$&'()*+,;=`.%]+\\.([a-z]{2}|com|net|org|edu|int|gov|mil)(\\/[A-Za-z0-9\\-._~:\\/?#\\[\\]@!$&'()*+,;=`.%]*)?\\b".r
 
+  protected val urlChars: Regex = "[A-Za-z0-9\\-._~:/\\?#\\[\\]@!$&'()*+,;=`.%]".r
+//  val urlRegex = s"""\b(https?://|www\.)?$permissibleUrlCharacters+\.([a-z]{2}|com|net|org|edu|int|gov|mil)($permissibleUrlCharacters*)\b""".r
 
   def anyMatchingRegex(string: String, regexes: Seq[Regex]) = regexes.find(_.findFirstIn(string).isDefined)
 
@@ -71,3 +73,5 @@ trait MdRegexes {
   def matchString(regex: Regex, string: String) = regex.findFirstIn(string).isDefined
 
 }
+
+object MdRegexes extends MdRegexes

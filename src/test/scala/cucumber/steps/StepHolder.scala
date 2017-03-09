@@ -5,6 +5,12 @@ import com.gray.string.AttributedString
 
 object StepHolder {
 
+  def reset = {
+    document = null
+    renderResult = null
+    rawString = null
+  }
+
   var document: MdDocument = null
   var renderResult: AttributedString = null
 
