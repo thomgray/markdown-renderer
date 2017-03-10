@@ -1,7 +1,7 @@
 package cucumber.steps
 
 import com.gray.markdown.produce.MdParser
-import com.gray.markdown.{MdChecktList, MdLink, MdLinkable, MdString}
+import com.gray.markdown._
 import cucumber.api.PendingException
 
 class ParseSteps extends BaseSteps with MdParser {
@@ -20,6 +20,8 @@ class ParseSteps extends BaseSteps with MdParser {
   When("""^I parse a string containing an? "([^"]*)" link$""") { (arg0: String) =>
     holder.rawString = arg0 match {
       case "unreferenced" => "for more information go to www.google.com"
+      case "labeled" => "for more information go to [google](www.google.com)"
+      case "referenced" => "for more information [go to google][google]"
       case _ => throw new PendingException()
     }
   }
@@ -46,10 +48,25 @@ class ParseSteps extends BaseSteps with MdParser {
 
   Then("""^the (\d+)st paragraph contains an? "([^"]*)" link$""") { (arg0: Int, arg1: String) =>
     val par = holder.document.paragraphs(arg0 - 1)
-    par.asInstanceOf[MdLinkable].links() shouldBe (arg1 match {
+    val context = arg1 match {
+      case "referenced" =>
+        List(
+          MdLinkReference("google", "www.google.com")
+        )
+      case _ => Nil
+    }
+    par.asInstanceOf[MdLinkable].links(context) shouldBe (arg1 match {
       case "unreferenced" =>
         List(
           MdLink("www.google.com", None)
+        )
+      case "labeled" =>
+        List(
+          MdLink("www.google.com", "google")
+        )
+      case "referenced" =>
+        List(
+          MdLink("www.google.com", "go to google")
         )
       case _ => throw new PendingException()
     })
