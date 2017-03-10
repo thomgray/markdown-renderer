@@ -7,11 +7,11 @@ abstract class MdParagraph
 case object MdBreak extends MdParagraph
 
 case class MdHeader(mdString: MdString, value: Int) extends MdParagraph with MdLinkable {
-  override def links(linkContext: List[MdLink]): List[MdLink] = mdString.links(linkContext)
+  override def links(linkContext: List[MdLinkReference]): List[MdLink] = mdString.links(linkContext)
 }
 
 case class MdString(string: String) extends MdParagraph with MdLinkable {
-  override def links(linkContext: List[MdLink]): List[MdLink] = extractLinksWithString(string, linkContext)
+  override def links(linkContext: List[MdLinkReference]): List[MdLink] = extractLinksWithString(string, linkContext)
 }
 
 case class MdQuote(string: String) extends MdParagraph
@@ -47,3 +47,4 @@ case class MdChecktList(override val items: List[MdCheckListItem]) extends MdLis
 case class MdCheckListItem(override val paragraphs: List[MdParagraph], checked: Boolean) extends MdListItem(paragraphs)
 
 case class MdLink(url: String, label: Option[String])
+case class MdLinkReference(label: String, url: String)

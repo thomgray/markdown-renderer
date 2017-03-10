@@ -19,7 +19,7 @@ class ParseSteps extends BaseSteps with MdParser {
 
   When("""^I parse a string containing an? "([^"]*)" link$""") { (arg0: String) =>
     holder.rawString = arg0 match {
-      case "unreferenced" => "for more information go to wwww.google.com"
+      case "unreferenced" => "for more information go to www.google.com"
       case _ => throw new PendingException()
     }
   }

@@ -60,7 +60,9 @@ trait MdRegexes {
   val nonIndentedAnthingRegex = "^ {0,3}.*$".r
   val nonIndentedSomething = "^ {0,3}\\S.*$".r
 
-  val urlRegex = """\b(https?://|www\\.)?\S+\.[a-z]{2,3}(\S*)\b""".r
+  val urlRegex = """\b(https?:\/\/|www\.)\S+\.[a-z]{2,3}(\S*)\b""".r
+  val inSquareBracesRegex = "(?:\\[(.+?)\\] {0,1})?\\[(.+?)\\]".r
+  val mdLinkRegex = """\[(.+)\]\( *((?:https?:\/\/|www\.)\S+\.[a-z]{2,3}\S*) *\)""".r
 
   def anyMatchingRegex(string: String, regexes: Seq[Regex]) = regexes.find(_.findFirstIn(string).isDefined)
 
