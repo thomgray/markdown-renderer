@@ -10,6 +10,11 @@ import scala.io.AnsiColor
 object ExpectedRendering extends ImplicitConversions with AnsiColor {
 
   val plainCode = MdCode("this is some code", None)
+  val stringWithUnreferencedLink = MdString("go to www.google.com for more information")
+  val stringWithLabeledLink = MdString("go to [google](www.google.com) for more information")
+  val stringWithReferencedLink = MdString("go to [google][google link] for more information")
+  val stringWithMonadicReferencedLink = MdString("go to [google] for more information")
+  val stringWithMixtureOfLinkStyles = MdString("go to [google], [facebook][fb], [github](www.githum.com) or www.wikipedia.com for more")
   val quote = MdQuote("this is a quote")
 
   def apply(mdParagraph: MdParagraph): AttributedString = map(mdParagraph)
@@ -24,18 +29,33 @@ object ExpectedRendering extends ImplicitConversions with AnsiColor {
     topBottom + newline + middle + newline + topBottom
   }
 
-  private val expectedQuoteString = {
-    val frontBit = " " << WHITE_B
-    frontBit + " this is a quote"
-  }
+  private val expectedUnreferencedLinkString = AttributedString("go to ") + ("www.google.com" << BLUE) + " for more information"
+  private val expectedLabeledLinkString = AttributedString("go to ") + ("google" << BLUE) + " for more information"
+
+  private val expectedQuoteString = (" " << WHITE_B) +  " this is a quote"
+
+  private val expectedLinkMixtureString =
+    AttributedString("go to ") +
+      ("google" << BLUE) +
+      ", " +
+      ("facebook" << BLUE) +
+      ", " +
+      ("github" << BLUE) +
+      " or " +
+      ("www.wikipedia.com" << BLUE) +
+      " for more"
+
 
   //######################### MAP ######################\\
 
   private val map = Map[MdParagraph, AttributedString](
     plainCode -> expectedPlainCodeString,
-    quote -> expectedQuoteString
+    quote -> expectedQuoteString,
+    stringWithUnreferencedLink -> expectedUnreferencedLinkString,
+    stringWithLabeledLink -> expectedLabeledLinkString,
+    stringWithReferencedLink -> expectedLabeledLinkString,
+    stringWithMixtureOfLinkStyles -> expectedLinkMixtureString
   )
-
 
   private def padString(string: String, length: Int) = {
     val toPad = length-string.length

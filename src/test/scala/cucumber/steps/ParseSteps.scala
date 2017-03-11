@@ -55,6 +55,7 @@ class ParseSteps extends BaseSteps with MdParser {
         )
       case _ => Nil
     }
+
     par.asInstanceOf[MdLinkable].links(context) shouldBe (arg1 match {
       case "unreferenced" =>
         List(

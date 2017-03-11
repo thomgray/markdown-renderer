@@ -12,23 +12,25 @@ trait MdRenderer extends StringFormatting with MdCodeColouring {
   protected val BOLD_FORMAT = Format(other = Some(List(AnsiColor.BOLD)))
   protected val UNDERLINED_FORMAT = Format(other = Some(List(AnsiColor.UNDERLINED)))
 
-  def render(document: MdDocument, width: Int): AttributedString = {
-    val result = document.paragraphs.map(render(_, width))
+  def render(document: MdDocument, width: Int, linkRefs: List[MdLinkReference] = Nil): AttributedString = {
+    val result = document.paragraphs.map(render(_, width, linkRefs))
     if (result.nonEmpty) result.reduce(_ + newParagraph + _) else AttributedString("")
   }
 
-  def render(paragraph: MdParagraph, width: Int): AttributedString = paragraph match {
-    case string: MdString => renderString(string, width)
+  def render(paragraph: MdParagraph, width: Int, linkRefs: List[MdLinkReference]): AttributedString = paragraph match {
+    case string: MdString => renderString(string, width, linkRefs)
     case code: MdCode => renderCode(code, width)
-    case list: MdList[MdListItem] => renderList(list, width)
+    case list: MdList[MdListItem] => renderList(list, width, linkRefs)
     case header: MdHeader => renderHeader(header, width)
     case quote: MdQuote => renderQuote(quote, width)
   }
 
-  protected def renderString(mdString: MdString, width: Int): AttributedString = {
-    val stringWithRegularSpacing = regularSpacedString(mdString.string)
-    val formatted = applyMdInlineFormatting(AttributedString(stringWithRegularSpacing))
-    formatted.wrapToWidth(width)
+  protected def renderString(mdString: MdString, width: Int, linkRefs: List[MdLinkReference] = Nil): AttributedString = {
+    regularSpacedString(mdString.string)  |
+      (AttributedString(_))               |
+      applyMdInlineFormatting             |
+      (applyLinkHighlighting(_, linkRefs))|
+      (_.wrapToWidth(width))
   }
 
   protected def renderCode(mdCode: MdCode, width: Int) = {
@@ -48,18 +50,18 @@ trait MdRenderer extends StringFormatting with MdCodeColouring {
     headerString
   }
 
-  protected def renderList(mdList: MdList[MdListItem], width: Int): AttributedString = {
-    renderListAtTier(mdList, width)
+  protected def renderList(mdList: MdList[MdListItem], width: Int, linkRefs: List[MdLinkReference]): AttributedString = {
+    renderListAtTier(mdList, width, linkRefs)
   }
 
-  protected def renderListAtTier(mdList: MdList[MdListItem], width: Int, tier: Int = 0): AttributedString = {
+  protected def renderListAtTier(mdList: MdList[MdListItem], width: Int, linkRefs: List[MdLinkReference], tier: Int = 0): AttributedString = {
     val trueWidth = width - indent.length
 
     var x = 1
     (mdList.items map { item =>
       val paragraphs = item.paragraphs.map({
-        case list: MdList[MdListItem] => renderListAtTier(list, trueWidth, tier+1)
-        case other => render(other, trueWidth)
+        case list: MdList[MdListItem] => renderListAtTier(list, trueWidth, linkRefs, tier+1)
+        case other => render(other, trueWidth, linkRefs)
       })
 
       val prefix = item match {

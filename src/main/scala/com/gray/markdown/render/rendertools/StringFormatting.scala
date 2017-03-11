@@ -1,9 +1,10 @@
 package com.gray.markdown.render.rendertools
 
+import com.gray.markdown.MdLinkReference
 import com.gray.markdown.produce.MdRegexes
 import com.gray.markdown.util.MapOne
 import com.gray.string.AttributedString
-import com.gray.string.domain.Format
+import com.gray.string.domain.{Attribute, Format}
 
 import scala.io.AnsiColor
 
@@ -12,6 +13,8 @@ trait StringFormatting extends MdRegexes with MapOne {
   protected val newParagraph = AttributedString("\n\n")
   protected val newLine = AttributedString("\n")
   protected val indent = AttributedString("     ")
+
+  protected val urlFormat = Format(foreground = Some(AnsiColor.BLUE))
 
   private val emptyCodeSpace = AttributedString(" ") << codeBackgroundFormat
 
@@ -65,7 +68,7 @@ trait StringFormatting extends MdRegexes with MapOne {
       case Some(mtch) =>
         val before = attributedString.subString(end = mtch.start)
         val after = attributedString.subString(mtch.end)
-        val bit = attributedString.subString(mtch.start+2, mtch.end-2) << Format(other = Some(List(AnsiColor.BOLD)))
+        val bit = attributedString.subString(mtch.start + 2, mtch.end - 2) << Format(other = Some(List(AnsiColor.BOLD)))
         applyBoldFormat(before + bit + after)
     }
   }
@@ -76,7 +79,7 @@ trait StringFormatting extends MdRegexes with MapOne {
       case Some(mtch) =>
         val before = attributedString.subString(end = mtch.start)
         val after = attributedString.subString(mtch.end)
-        val bit = attributedString.subString(mtch.start+1, mtch.end-1) << Format(other = Some(List(AnsiColor.UNDERLINED)))
+        val bit = attributedString.subString(mtch.start + 1, mtch.end - 1) << Format(other = Some(List(AnsiColor.UNDERLINED)))
         applyUnderlinedFormat(before + bit + after)
     }
   }
@@ -87,11 +90,46 @@ trait StringFormatting extends MdRegexes with MapOne {
       case Some(mtch) =>
         val before = attributedString.subString(end = mtch.start)
         val after = attributedString.subString(mtch.end)
-        val bit = attributedString.subString(mtch.start+1, mtch.end-1) << codeBackgroundFormat
+        val bit = attributedString.subString(mtch.start + 1, mtch.end - 1) << codeBackgroundFormat
         applyInlineCodeFormat(before + bit + after)
     }
   }
 
+  def applyLinkHighlighting(attributedString: AttributedString, linkRefs: List[MdLinkReference] = Nil) = {
+    applyLabeledLinkHighlighting(attributedString) |
+      applyPlainLinkHighlighting |
+      (s => applyRefLinkHighlighting(s, linkRefs))
+  }
+
+  protected def applyRefLinkHighlighting(attributedString: AttributedString, refs: List[MdLinkReference]) =
+    inSquareBracesRegex.findAllMatchIn(attributedString.string).
+      toList.foldRight(attributedString) { (mtch, string) =>
+      val label = mtch.group(1) match {
+        case null => mtch.group(2)
+        case other => other
+      }
+      val ref = mtch.group(2)
+      refs.find(_.label == ref) match {
+        case Some(reference) =>
+          val res = string.subString(end = mtch.start) + (AttributedString(label) << urlFormat) + string.subString(mtch.end)
+          res
+        case None => string
+      }
+    }
+
+  protected def applyLabeledLinkHighlighting(attributedString: AttributedString) =
+    mdLinkRegex.findAllMatchIn(attributedString.string)
+      .toList.foldRight(attributedString) { (mtch, string) =>
+      string.subString(end = mtch.start) +
+        (AttributedString(mtch.group(1)) << urlFormat) +
+        string.subString(mtch.end)
+    }
+
+  protected def applyPlainLinkHighlighting(attributedString: AttributedString) =
+    urlRegex.findAllMatchIn(attributedString.string).
+      toList.foldRight(attributedString) { (mtch, string) =>
+      string < Attribute(urlFormat, mtch.start, mtch.end)
+    }
 
   def colourBackground(attributedString: AttributedString, width: Int) = {
     val extraLine = AttributedString(concatenate(" ", width)) << codeBackgroundFormat
