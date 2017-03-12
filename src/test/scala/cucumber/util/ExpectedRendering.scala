@@ -9,13 +9,13 @@ import scala.io.AnsiColor
 
 object ExpectedRendering extends ImplicitConversions with AnsiColor {
 
-  val plainCode = MdCode("this is some code", None)
-  val stringWithUnreferencedLink = MdString("go to www.google.com for more information")
-  val stringWithLabeledLink = MdString("go to [google](www.google.com) for more information")
-  val stringWithReferencedLink = MdString("go to [google][google link] for more information")
-  val stringWithMonadicReferencedLink = MdString("go to [google] for more information")
-  val stringWithMixtureOfLinkStyles = MdString("go to [google], [facebook][fb], [github](www.githum.com) or www.wikipedia.com for more")
-  val quote = MdQuote("this is a quote")
+  val plainCode = MdCode("this is some code", None, MdLocation(0,0))
+  val stringWithUnreferencedLink = MdString("go to www.google.com for more information", MdLocation(0,0))
+  val stringWithLabeledLink = MdString("go to [google](www.google.com) for more information", MdLocation(0,0))
+  val stringWithReferencedLink = MdString("go to [google][google link] for more information", MdLocation(0,0))
+  val stringWithMonadicReferencedLink = MdString("go to [google] for more information", MdLocation(0,0))
+  val stringWithMixtureOfLinkStyles = MdString("go to [google], [facebook][fb], [github](www.githum.com) or www.wikipedia.com for more", MdLocation(0,0))
+  val quote = MdQuote("this is a quote", MdLocation(0,0))
 
   def apply(mdParagraph: MdParagraph): AttributedString = map(mdParagraph)
 

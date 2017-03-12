@@ -1,9 +1,8 @@
 package cucumber.steps
 
 import com.gray.markdown.render.MdRenderer
-import com.gray.markdown.{MdCode, MdDocument, MdLinkReference}
+import com.gray.markdown.{MdDocument, MdLinkReference, MdLocation}
 import com.gray.string.AttributedString
-import cucumber.api.PendingException
 import cucumber.util.ExpectedRendering
 
 import scala.util.{Failure, Success, Try}
@@ -18,31 +17,30 @@ class RenderingSteps extends BaseSteps {
   }
 
   Given("""^an MdDocument exists containing a string with an? (unreferenced|referenced|labeled|monadic referenced) link$"""){ (linkType: String) =>
-    val link = linkType match {
-      case "unreferenced" => stringWithUnreferencedLink
+
+    holder.document = linkType match {
+      case "unreferenced" => MdDocument(stringWithUnreferencedLink)
       case "referenced" =>
-        holder.linkRefs = MdLinkReference("google link", "www.google.com")
-        stringWithReferencedLink
+        MdDocument(stringWithReferencedLink, MdLinkReference("google link", "www.google.com", MdLocation(0,0)))
       case "monadic referenced" =>
-        holder.linkRefs = MdLinkReference("google", "www.google.com")
-        stringWithMonadicReferencedLink
-      case "labeled" => stringWithLabeledLink
+        MdDocument(stringWithMonadicReferencedLink, MdLinkReference("google", "www.google.com", MdLocation(0,0)))
+      case "labeled" => MdDocument(stringWithLabeledLink)
     }
-    holder.document = MdDocument(link)
   }
 
   Given("""^an MdDocument exists containing a string with a mixture of link styles$"""){ () =>
-    holder.document = MdDocument(stringWithMixtureOfLinkStyles)
-    holder.linkRefs = List(
-      MdLinkReference("fb", "www.facebook.com"),
-      MdLinkReference("google", "www.google.com")
+    holder.document = MdDocument(stringWithMixtureOfLinkStyles,
+      List(
+        MdLinkReference("fb", "www.facebook.com", MdLocation(0,0)),
+        MdLinkReference("google", "www.google.com", MdLocation(0,0))
+      )
     )
     expectedRenderResult = ExpectedRendering(stringWithMixtureOfLinkStyles)
   }
 
   When("""^I render the document$""") { () =>
     holder.renderResult = Try {
-      MdRenderer.render(holder.document, 100, holder.linkRefs)
+      MdRenderer.render(holder.document, 100)
     } match {
       case Success(res) => res
       case Failure(e) =>
@@ -53,7 +51,7 @@ class RenderingSteps extends BaseSteps {
   }
 
   Then("""^I receive an attributed string$""") { () =>
-    holder.renderResult shouldBe a[AttributedString]
+    holder.renderResult shouldBe an [AttributedString]
     holder.renderResult should not be null
   }
 
@@ -75,7 +73,6 @@ class RenderingSteps extends BaseSteps {
   }
 
   Then("""^the result has been properly formatted$"""){ () =>
-    println(holder.renderResult)
     holder.renderResult.string shouldBe expectedRenderResult.string
     holder.renderResult shouldBe expectedRenderResult
   }

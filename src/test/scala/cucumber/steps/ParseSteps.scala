@@ -51,7 +51,7 @@ class ParseSteps extends BaseSteps with MdParser {
     val context = arg1 match {
       case "referenced" =>
         List(
-          MdLinkReference("google", "www.google.com")
+          MdLinkReference("google", "www.google.com", MdLocation(0,0))
         )
       case _ => Nil
     }

@@ -11,16 +11,18 @@ class MdParserSpec extends FlatSpec with Matchers with MockitoSugar with BeforeA
 
   import scala.language.implicitConversions
 
-  val stubCodeBlock = MdCode("foo", None)
-  val stubString = MdString("foo")
-  val stubQuote = MdQuote("foo")
-  val stubBulletItem = MdBulletListItem(Nil)
-  val stubBulletList = MdBulletList(List(stubBulletItem))
+  private val noLocation = MdLocation(0,0)
 
-  val stringOne = MdString("one")
-  val stringTwo = MdString("two")
-  val stringThree = MdString("three")
-  val stringFour = MdString("four")
+  val stubCodeBlock = MdCode("foo", None, noLocation)
+  val stubString = MdString("foo",noLocation)
+  val stubQuote = MdQuote("foo", noLocation)
+  val stubBulletItem = MdBulletListItem(Nil, noLocation)
+  val stubBulletList = MdBulletList(List(stubBulletItem), noLocation)
+
+  val stringOne = MdString("one", noLocation)
+  val stringTwo = MdString("two", noLocation)
+  val stringThree = MdString("three", noLocation)
+  val stringFour = MdString("four", noLocation)
 
   it should "parse code" in {
     val str =
@@ -30,7 +32,7 @@ class MdParserSpec extends FlatSpec with Matchers with MockitoSugar with BeforeA
 
 
     val result = parse(str).paragraphs
-    result shouldBe List(MdCode("this is some code", None))
+    result shouldBe List(MdCode("this is some code", None, noLocation))
   }
 
   it should "parse indented code" in {
@@ -41,7 +43,7 @@ class MdParserSpec extends FlatSpec with Matchers with MockitoSugar with BeforeA
 
     val result = parse(str).paragraphs
 
-    result shouldBe List(MdCode("this is indented!\nso is this", None))
+    result shouldBe List(MdCode("this is indented!\nso is this", None, noLocation))
   }
 
   it should "treat unchecked text as a string" in {
@@ -52,7 +54,7 @@ class MdParserSpec extends FlatSpec with Matchers with MockitoSugar with BeforeA
 
     val result  = parse(str)
 
-    result.paragraphs shouldBe List(MdString(str))
+    result.paragraphs shouldBe List(MdString(str, noLocation))
   }
 
   it should "parse quotes" in {
@@ -62,7 +64,7 @@ class MdParserSpec extends FlatSpec with Matchers with MockitoSugar with BeforeA
 
     val result = parse(str).paragraphs
     result.length shouldBe 1
-    result.head shouldBe MdQuote("this is a quote accross several lines")
+    result.head shouldBe MdQuote("this is a quote accross several lines", noLocation)
   }
 
   it should "parse quotes when preceded by blank space" in {
@@ -72,7 +74,7 @@ class MdParserSpec extends FlatSpec with Matchers with MockitoSugar with BeforeA
         |""".stripMargin
     val result = parse(str).paragraphs
     result.length shouldBe 1
-    result.head shouldBe MdQuote("this is a quote")
+    result.head shouldBe MdQuote("this is a quote", noLocation)
   }
 
   it should "parse a single bullet list item" in {
@@ -80,7 +82,7 @@ class MdParserSpec extends FlatSpec with Matchers with MockitoSugar with BeforeA
 
     val result = parse(str).paragraphs
 
-    result shouldBe List(MdBulletList(List(MdBulletListItem(List("hello")))))
+    result shouldBe List(MdBulletList(List(MdBulletListItem(List("hello"), noLocation)), noLocation))
   }
 
   it should "parse bulleted lists" in {
@@ -96,10 +98,15 @@ class MdParserSpec extends FlatSpec with Matchers with MockitoSugar with BeforeA
 
     result shouldBe List(
       MdBulletList(List(
-        MdBulletListItem(List(stringOne)),
-        MdBulletListItem(List(stringTwo)),
-        MdBulletListItem(List(stringThree, MdBulletList(List(MdBulletListItem(List(stringFour))))))
-      ))
+        MdBulletListItem(List(stringOne), noLocation),
+        MdBulletListItem(List(stringTwo), noLocation),
+        MdBulletListItem(List(
+          stringThree,
+          MdBulletList(List(
+            MdBulletListItem(List(stringFour),noLocation)
+          ),noLocation)
+        ),noLocation)
+      ), noLocation)
     )
   }
 
@@ -110,7 +117,7 @@ class MdParserSpec extends FlatSpec with Matchers with MockitoSugar with BeforeA
 
     val result= parse(str).paragraphs
 
-    result shouldBe List(MdBulletList(List(MdBulletListItem(stringOne), MdBulletListItem(stringTwo))))
+    result shouldBe List(MdBulletList(List(MdBulletListItem(stringOne, noLocation), MdBulletListItem(stringTwo, noLocation)), noLocation))
 
 
   }
@@ -122,7 +129,7 @@ class MdParserSpec extends FlatSpec with Matchers with MockitoSugar with BeforeA
 
     val result= parse(str).paragraphs
 
-    result shouldBe List(MdBulletList(List(MdBulletListItem(stringOne), MdBulletListItem(stringTwo))))
+    result shouldBe List(MdBulletList(List(MdBulletListItem(stringOne, noLocation), MdBulletListItem(stringTwo, noLocation)), noLocation))
   }
 
   it should "break a list when formatting ends" in {
@@ -135,7 +142,7 @@ class MdParserSpec extends FlatSpec with Matchers with MockitoSugar with BeforeA
 
     results.length shouldBe 2
     results(0) shouldBe a [MdBulletList]
-    results(1) shouldBe MdString("hello")
+    results(1) shouldBe MdString("hello", noLocation)
   }
 
   it should "parse numbered lists" in {
@@ -144,14 +151,14 @@ class MdParserSpec extends FlatSpec with Matchers with MockitoSugar with BeforeA
     val results = parse(str).paragraphs
 
     results shouldBe List(
-      MdNumberList(MdNumberListItem(stringOne))
+      MdNumberList(MdNumberListItem(stringOne, noLocation), noLocation)
     )
   }
 
   it should "parse task|check lists" in {
     val str = """- [ ] one"""
     parse(str).paragraphs shouldBe List(
-      MdChecktList(MdCheckListItem(MdString("one"), false))
+      MdChecktList(MdCheckListItem(MdString("one", noLocation), false, noLocation), noLocation)
     )
   }
 
@@ -160,9 +167,9 @@ class MdParserSpec extends FlatSpec with Matchers with MockitoSugar with BeforeA
       """- [ ] one
         |- [x] two""".stripMargin
     parse(str).paragraphs shouldBe List(MdChecktList(List(
-      MdCheckListItem(MdString("one"), false),
-      MdCheckListItem(MdString("two"), true)
-    )))
+      MdCheckListItem(MdString("one", noLocation), false, noLocation),
+      MdCheckListItem(MdString("two",noLocation), true, noLocation)
+    ),noLocation))
   }
 
   it should "parse headers" in {
@@ -171,7 +178,7 @@ class MdParserSpec extends FlatSpec with Matchers with MockitoSugar with BeforeA
     val results = parse(str).paragraphs
 
     results shouldBe List(
-        MdHeader("header1", 1)
+        MdHeader("header1", 1, noLocation)
     )
   }
 
@@ -183,7 +190,7 @@ class MdParserSpec extends FlatSpec with Matchers with MockitoSugar with BeforeA
     val result = parse(str).paragraphs
 
     result shouldBe List(
-      MdHeader("hello", 2)
+      MdHeader("hello", 2, noLocation)
     )
   }
 
@@ -194,7 +201,7 @@ class MdParserSpec extends FlatSpec with Matchers with MockitoSugar with BeforeA
     val result = parse(str).paragraphs
 
     result shouldBe List(
-      MdHeader("hello", 1)
+      MdHeader("hello", 1, noLocation)
     )
   }
 
@@ -207,8 +214,8 @@ class MdParserSpec extends FlatSpec with Matchers with MockitoSugar with BeforeA
     val result = parse(str).paragraphs
 
     result.length shouldBe 2
-    result(0) shouldBe MdString("hello there")
-    result(1) shouldBe MdString("this is another")
+    result(0) shouldBe MdString("hello there", noLocation)
+    result(1) shouldBe MdString("this is another", noLocation)
   }
 
   it should "handle empty strings" in {
@@ -227,7 +234,7 @@ class MdParserSpec extends FlatSpec with Matchers with MockitoSugar with BeforeA
         |this is a string
         |
       """.stripMargin).paragraphs shouldBe List(
-      MdString("this is a string")
+      MdString("this is a string", noLocation)
     )
   }
 

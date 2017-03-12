@@ -9,8 +9,9 @@ import scala.io.AnsiColor
 
 class MdRendererSpec extends FlatSpec with Matchers with MdRenderer with ImplicitConversions with AnsiColor {
 
+  val noLocation = MdLocation(0,0)
   "renderHeader" should "render a v1 header with double underlines" in {
-    val header = MdHeader("header", 1)
+    val header = MdHeader("header", 1, noLocation)
     val expected = AttributedString("HEADER\n══════") << BOLD
     val actual = render(header, 50, Nil)
     actual.attributes shouldBe expected.attributes
@@ -18,7 +19,7 @@ class MdRendererSpec extends FlatSpec with Matchers with MdRenderer with Implici
   }
 
   it should "render a v2 header with single underline" in {
-    val header = MdHeader("header", 2)
+    val header = MdHeader("header", 2, noLocation)
     val expected = AttributedString("HEADER\n──────") << BOLD
     val actual = renderHeader(header, 50)
     actual.attributes shouldBe expected.attributes
@@ -26,7 +27,7 @@ class MdRendererSpec extends FlatSpec with Matchers with MdRenderer with Implici
   }
 
   it should "render a v3 header with underlined format" in {
-    val header = MdHeader("header", 3)
+    val header = MdHeader("header", 3, noLocation)
     val expected = AttributedString("HEADER") << BOLD << stringToFormat(UNDERLINED)
     val actual = renderHeader(header, 50)
     actual.attributes shouldBe expected.attributes
@@ -34,7 +35,7 @@ class MdRendererSpec extends FlatSpec with Matchers with MdRenderer with Implici
   }
 
   it should "render a v4 header in capitals" in {
-    val header = MdHeader("header", 4)
+    val header = MdHeader("header", 4, noLocation)
     val expected = AttributedString("HEADER") << BOLD
     val actual = renderHeader(header, 50)
     actual.attributes shouldBe expected.attributes
@@ -42,7 +43,7 @@ class MdRendererSpec extends FlatSpec with Matchers with MdRenderer with Implici
   }
 
   it should "render a v5 header in bold" in {
-    val header = MdHeader("header", 5)
+    val header = MdHeader("header", 5, noLocation)
     val expected = AttributedString("header") << BOLD
     val actual = renderHeader(header, 50)
     actual.attributes shouldBe expected.attributes
@@ -53,7 +54,7 @@ class MdRendererSpec extends FlatSpec with Matchers with MdRenderer with Implici
     val str = "this is  an    irregularly\nspaced   string"
     val expected = "this is an irregularly spaced string"
 
-    val mdString = MdString(str)
+    val mdString = MdString(str, noLocation)
     render(mdString, 100, Nil) shouldBe AttributedString(expected)
   }
 
@@ -70,7 +71,7 @@ class MdRendererSpec extends FlatSpec with Matchers with MdRenderer with Implici
   }
 
   it should "apply inline formatting" in {
-    val str = MdString("this is __bold__ and this is _underlined_")
+    val str = MdString("this is __bold__ and this is _underlined_", noLocation)
     val actual = renderString(str, 100)
     val expected = AttributedString("this is ") +
       (AttributedString("bold") << BOLD) +
@@ -97,20 +98,22 @@ class MdRendererSpec extends FlatSpec with Matchers with MdRenderer with Implici
   it should "replace referenced urls with formatted urls if the reference is specified" in {
     val str: MdString = "go to [google][google link] for more"
     val expected = AttributedString("go to ") + ("google" << BLUE) + " for more"
-    val actual = render(str, 100, MdLinkReference("google link", "www.google.com"))
+    val actual = render(str, 100, MdLinkReference("google link", "www.google.com", noLocation))
     expected shouldBe actual
   }
 
   "renderList" should "bullet a list with an indent" in {
-    val list = MdBulletList(List(MdBulletListItem(MdString("one")), MdBulletListItem(MdString("two"))))
-    val actual = render(list, 100, MdLinkReference("google link", "www.google.com")).string
+    val list = MdBulletList(List(
+      MdBulletListItem(MdString("one", noLocation), noLocation), MdBulletListItem(MdString("two", noLocation), noLocation)
+    ), noLocation)
+    val actual = render(list, 100, MdLinkReference("google link", "www.google.com",noLocation)).string
     actual shouldBe
       """   • one
         |   • two""".stripMargin
   }
 
   it should "indent but not bullet paragraphs within a single bullet" in {
-    val list = MdBulletList(MdBulletListItem(List("one", "two", "three")))
+    val list = MdBulletList(MdBulletListItem(List("one", "two", "three"), noLocation), noLocation)
     render(list, 100, Nil).string shouldBe
       """   • one
         |
@@ -120,9 +123,9 @@ class MdRendererSpec extends FlatSpec with Matchers with MdRenderer with Implici
   }
 
   it should "indent bullet tiers and choose the appropriate bullet" in {
-    val lastList = MdBulletList(MdBulletListItem(MdString("one")))
-    val secondList = MdBulletList(MdBulletListItem(List("two", lastList)))
-    val list = MdBulletList(MdBulletListItem(List("three", secondList)))
+    val lastList = MdBulletList(MdBulletListItem(MdString("one", noLocation), noLocation), noLocation)
+    val secondList = MdBulletList(MdBulletListItem(List("two", lastList), noLocation), noLocation)
+    val list = MdBulletList(MdBulletListItem(List("three", secondList), noLocation), noLocation)
 
     val actual = render(list, 100, Nil).string
     actual shouldBe
@@ -134,7 +137,7 @@ class MdRendererSpec extends FlatSpec with Matchers with MdRenderer with Implici
   }
 
   it should "render a numbered list" in {
-    val list = MdNumberList(MdNumberListItem(MdString("hello")))
+    val list = MdNumberList(MdNumberListItem(MdString("hello",noLocation), noLocation), noLocation)
     val actual = render(list, 100, Nil)
 
     actual.string shouldBe "  1. hello"
@@ -142,17 +145,17 @@ class MdRendererSpec extends FlatSpec with Matchers with MdRenderer with Implici
 
   it should "right align the numerals" in {
     val list = MdNumberList(List(
-      MdNumberListItem(MdString("one")),
-      MdNumberListItem(MdString("two")),
-      MdNumberListItem(MdString("three")),
-      MdNumberListItem(MdString("four")),
-      MdNumberListItem(MdString("five")),
-      MdNumberListItem(MdString("six")),
-      MdNumberListItem(MdString("seven")),
-      MdNumberListItem(MdString("eight")),
-      MdNumberListItem(MdString("nine")),
-      MdNumberListItem(MdString("ten"))
-    ))
+      MdNumberListItem(MdString("one", noLocation), noLocation),
+      MdNumberListItem(MdString("two", noLocation),noLocation),
+      MdNumberListItem(MdString("three", noLocation),noLocation),
+      MdNumberListItem(MdString("four", noLocation),noLocation),
+      MdNumberListItem(MdString("five", noLocation),noLocation),
+      MdNumberListItem(MdString("six", noLocation),noLocation),
+      MdNumberListItem(MdString("seven", noLocation),noLocation),
+      MdNumberListItem(MdString("eight", noLocation),noLocation),
+      MdNumberListItem(MdString("nine", noLocation),noLocation),
+      MdNumberListItem(MdString("ten", noLocation),noLocation)
+    ), noLocation)
 
     val expected =
       """  1. one
@@ -171,9 +174,9 @@ class MdRendererSpec extends FlatSpec with Matchers with MdRenderer with Implici
 
   it should "render a check list" in {
     val list = MdChecktList(List(
-      MdCheckListItem(MdString("checked"), checked = true),
-      MdCheckListItem(MdString("unchecked"), checked = false)
-    ))
+      MdCheckListItem(MdString("checked", noLocation), checked = true,noLocation),
+      MdCheckListItem(MdString("unchecked", noLocation), checked = false, noLocation)
+    ), noLocation)
 
     val actual = render(list, 100, Nil).toString
 
@@ -189,13 +192,13 @@ class MdRendererSpec extends FlatSpec with Matchers with MdRenderer with Implici
     val expected =
       """   • this is a lovely string
         |     which is rather long""".stripMargin
-    val list = MdBulletList(MdBulletListItem(MdString(str)))
+    val list = MdBulletList(MdBulletListItem(MdString(str, noLocation), noLocation), noLocation)
 
     render(list, 30, Nil).string shouldBe expected
   }
 
   "renderQuote" should "render a quote" in {
-    val quote = MdQuote("hello there, this is a quote, don't you know")
+    val quote = MdQuote("hello there, this is a quote, don't you know", noLocation)
     val expected = (AttributedString(" ") << WHITE_B) + AttributedString(" hello there, this is a quote, don't you know")
     render(quote, 100, Nil) shouldBe expected
   }
@@ -208,7 +211,7 @@ class MdRendererSpec extends FlatSpec with Matchers with MdRenderer with Implici
        |    this will not compile
        |  }
        |""".stripMargin
-    val code = MdCode(codeString, None)
+    val code = MdCode(codeString, None, noLocation)
     val actual = renderCode(code, 30).string
 
     val expected =
@@ -223,7 +226,7 @@ class MdRendererSpec extends FlatSpec with Matchers with MdRenderer with Implici
   }
 
   it should "colour the background black" in {
-    val code = MdCode("some code", None)
+    val code = MdCode("some code", None, noLocation)
     val actual = renderCode(code, 20)
     val expectedStr =
      """|                    |

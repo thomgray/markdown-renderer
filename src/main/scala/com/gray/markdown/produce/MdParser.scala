@@ -16,7 +16,8 @@ trait MdParser extends MdRegexes with MdFactory with MapOne {
     val stringBuffer = mutable.ListBuffer[String]()
 
     def flushStringBuffer = if (stringBuffer.nonEmpty) {
-      val newStringParagraph = MdString(stringBuffer.mkString("\n"))
+      val location = MdLocation(mark-stringBuffer.length, mark)
+      val newStringParagraph = MdString(stringBuffer.mkString("\n"), location)
       paragraphs.append(newStringParagraph)
       stringBuffer.clear()
     }
@@ -59,7 +60,7 @@ trait MdParser extends MdRegexes with MdFactory with MapOne {
     val endIndex = lines.indexWhere(codeEndRegex.findFirstIn(_).isDefined, marker + 1)
     if (endIndex > 0) {
       val codeLines = lines.slice(marker + 1, endIndex)
-      val code = MdCode(codeLines.mkString("\n"), language)
+      val code = MdCode(codeLines.mkString("\n"), language, MdLocation(marker, endIndex+1))
       Some(code, endIndex + 1)
     } else None
   }
@@ -70,7 +71,7 @@ trait MdParser extends MdRegexes with MdFactory with MapOne {
       case other => other
     }
     val string = lines.slice(marker, end).map(_.replaceAll("^ *> *", "")).mkString(" ")
-    Some(MdQuote(string), end)
+    Some(MdQuote(string, MdLocation(marker, end)), end)
   }
 
   def findIndentedCodeBlock(lines: List[String], marker: Int) = indentedLiteralRegex.findFirstIn(lines(marker)) flatMap { mtch =>
@@ -79,7 +80,7 @@ trait MdParser extends MdRegexes with MdFactory with MapOne {
       case other => other
     }
     val string = lines.slice(marker, endIndex).map(_.stripPrefix("    ")).mkString("\n")
-    Some(MdCode(string, None), endIndex)
+    Some(MdCode(string, None, MdLocation(marker, endIndex)), endIndex)
   }
 
   private val itemRegexes = List(bulletListItemRegex, checkListItemRegex, numberedListItemRegex)
@@ -88,20 +89,20 @@ trait MdParser extends MdRegexes with MdFactory with MapOne {
     itemRegexes mapOne (regex => regex.findFirstMatchIn(lines(marker)).map(mtch => (regex, mtch))) map { tuple =>
       val (regex, mtch) = tuple
       val (lastIndex, itemLines) = doMap(marker) { marker2 =>
-        if (marker2 < lines.length) findListItem(lines, marker2, regex) map (_.swap)
+        if (marker2 < lines.length) findListItem(lines, marker2, regex) map (tuple => (tuple._2, (tuple._1._1, tuple._1._2, MdLocation(marker2, tuple._2))))
         else None
       }
-      val paragraphs = itemLines.map(l => (parse(l._1.mkString("\n")).paragraphs, l._2))
+      val paragraphs = itemLines.map(l => (parse(l._1.mkString("\n")).paragraphs, l._2, l._3))
       val result = regex match {
         case `bulletListItemRegex` =>
-          val items = paragraphs.map(l => MdBulletListItem(l._1))
-          MdBulletList(items.toList) -> lastIndex
+          val items = paragraphs.map(l => MdBulletListItem(l._1, l._3))
+          MdBulletList(items.toList, MdLocation(marker, paragraphs.last._3.endLine)) -> lastIndex
         case `numberedListItemRegex` =>
-          val items = paragraphs.map(l => MdNumberListItem(l._1))
-          MdNumberList(items.toList) -> lastIndex
+          val items = paragraphs.map(l => MdNumberListItem(l._1, l._3))
+          MdNumberList(items.toList, MdLocation(marker, paragraphs.last._3.endLine)) -> lastIndex
         case `checkListItemRegex` =>
-          val items = paragraphs.map(l => MdCheckListItem(l._1, l._2.contains("x")))
-          MdChecktList(items.toList) -> lastIndex
+          val items = paragraphs.map(l => MdCheckListItem(l._1, l._2.contains("x"), l._3))
+          MdChecktList(items.toList, MdLocation(marker, paragraphs.last._3.endLine)) -> lastIndex
       }
       result
     }
@@ -131,7 +132,8 @@ trait MdParser extends MdRegexes with MdFactory with MapOne {
   }
 
   def findHeader(lines: List[String], marker: Int) = headerRegex.findFirstMatchIn(lines(marker)) map { mtch =>
-    (MdHeader(MdString(mtch.group(2)), mtch.group(1).length), marker + 1)
+    (MdHeader(MdString(mtch.group(2), MdLocation(marker, marker+1)),
+      mtch.group(1).length, MdLocation(marker, marker+1)), marker + 1)
   } match {
     case Some(res) => Some(res)
     case None if marker + 1 < lines.length && nonIndentedAnthingRegex.findFirstIn(lines(marker)).isDefined =>
@@ -139,7 +141,7 @@ trait MdParser extends MdRegexes with MdFactory with MapOne {
       val indexOpt = if (nextLineTrimmed.matches("-{3,}")) Some(2)
       else if (nextLineTrimmed.matches("={3,}")) Some(1)
       else None
-      indexOpt map (i => (MdHeader(MdString(lines(marker)), i), marker + 2))
+      indexOpt map (i => (MdHeader(MdString(lines(marker), MdLocation(marker, marker+1)), i, MdLocation(marker, marker+1)), marker + 2))
     case _ => None
   }
 

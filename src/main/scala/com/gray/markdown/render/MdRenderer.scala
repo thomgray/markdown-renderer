@@ -12,8 +12,8 @@ trait MdRenderer extends StringFormatting with MdCodeColouring {
   protected val BOLD_FORMAT = Format(other = Some(List(AnsiColor.BOLD)))
   protected val UNDERLINED_FORMAT = Format(other = Some(List(AnsiColor.UNDERLINED)))
 
-  def render(document: MdDocument, width: Int, linkRefs: List[MdLinkReference] = Nil): AttributedString = {
-    val result = document.paragraphs.map(render(_, width, linkRefs))
+  def render(document: MdDocument, width: Int): AttributedString = {
+    val result = document.paragraphs.map(render(_, width, document.linkRefs))
     if (result.nonEmpty) result.reduce(_ + newParagraph + _) else AttributedString("")
   }
 

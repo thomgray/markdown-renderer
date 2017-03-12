@@ -1,6 +1,6 @@
 package com.gray.util
 
-import com.gray.markdown.MdString
+import com.gray.markdown.{MdLocation, MdString}
 import com.gray.string.AttributedString
 import com.gray.string.domain.Format
 import sun.security.util.PendingException
@@ -41,5 +41,5 @@ trait ImplicitConversions {
   implicit def stringToAttributedString(string: String): AttributedString = AttributedString(string)
 
   implicit def toList[T](t:T): List[T] = List(t)
-  implicit def stringToMdString(string: String): MdString = MdString(string)
+  implicit def stringToMdString(string: String): MdString = MdString(string, MdLocation(0,0))
 }
