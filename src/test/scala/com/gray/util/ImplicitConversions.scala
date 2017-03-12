@@ -41,5 +41,5 @@ trait ImplicitConversions {
   implicit def stringToAttributedString(string: String): AttributedString = AttributedString(string)
 
   implicit def toList[T](t:T): List[T] = List(t)
-  implicit def stringToMdString(string: String): MdString = MdString(string, MdLocation(0,0))
+  implicit def stringToMdString(string: String): MdString = MdString(string, MdLocation(0,string.split("\n").length))
 }

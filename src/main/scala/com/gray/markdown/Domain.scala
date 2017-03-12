@@ -51,3 +51,7 @@ case class MdLink(url: String, label: Option[String])
 case class MdLinkReference(label: String, url: String, location: MdLocation)
 
 case class MdLocation(startLine: Int, endLine: Int, startColumn: Int = 0, endColumn: Int = 0)
+
+object @@ {
+  def apply(start: Int, end: Int) = MdLocation(start, end)
+}
