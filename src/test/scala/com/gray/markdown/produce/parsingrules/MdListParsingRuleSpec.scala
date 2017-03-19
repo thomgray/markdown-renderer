@@ -6,7 +6,6 @@ class MdListParsingRuleSpec extends FlatSpec with Matchers {
 
   import MdListParsingRule._
 
-
   "findListItem" should "pick out a bullet list item body" in {
     val str = """- hello there"""
     val lines = findListItem(str.split("\n").toList, 0, bulletListItemRegex)
