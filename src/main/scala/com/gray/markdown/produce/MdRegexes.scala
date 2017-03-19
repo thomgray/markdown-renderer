@@ -45,13 +45,15 @@ trait MdRegexes {
 
   ///table-related regexes
   val tableHeaderRegex =
-  """table header""".r
+  """^\|?(.+\|)*\|?$""".r
   /*
   its dash-bar with optional bar at the beginning and optional dash at the end
   Or just bar dash
   */
   val tableSeparatorRegex =
   """^\s*\|?\s*((:?-+:?)\s*\|\s*)+(:?-+:?)?\s*$|\s*\|\s*(:?-+:?)\s*""".r
+
+  val tableColItemRegex = """^\s*\|?\s*\S.*?\s*(\||$)""".r
 
   //unambiguous single lines
   val headerRegex = "^ {0,3}(#{1,5}) +(.*)$".r

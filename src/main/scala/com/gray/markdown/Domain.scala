@@ -54,4 +54,13 @@ case class MdLocation(startLine: Int, endLine: Int, startColumn: Int = 0, endCol
 
 object @@ {
   def apply(start: Int, end: Int) = MdLocation(start, end)
+  def apply(startLine: Int, endLine: Int, starkCol: Int, endCol: Int) = new MdLocation(startLine, endLine, starkCol, endCol)
 }
+
+case class MdTable( headers: List[MdString],
+                    data: List[MdTableRow],
+                    columnAlignments: List[Int],
+                    override val location: MdLocation
+                  ) extends MdParagraph(location)
+
+case class MdTableRow(data: List[MdString])

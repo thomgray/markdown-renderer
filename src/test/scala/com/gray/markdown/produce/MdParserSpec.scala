@@ -296,5 +296,4 @@ class MdParserSpec extends FlatSpec with Matchers with MockitoSugar with BeforeA
       (List("hello there","- inner list"), "- ", 2)
     )
   }
-
 }
