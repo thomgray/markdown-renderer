@@ -52,8 +52,8 @@ object MdTableParsingRule extends MdParsingRule with MapOne {
         case Some((mtch, rest)) =>
           val mtch1 = mtch.stripPrefix("|").stripSuffix("|").trim
           val alignment =
-            if (mtch1.startsWith(":") && mtch.endsWith(":")) ALIGN_CENTRE
-            else if (mtch.endsWith(":")) ALIGN_RIGHT
+            if (mtch1.startsWith(":") && mtch1.endsWith(":")) ALIGN_CENTRE
+            else if (mtch1.endsWith(":")) ALIGN_RIGHT
             else ALIGN_LEFT
           recursive(rest, soFar :+ alignment)
       }
@@ -65,7 +65,6 @@ object MdTableParsingRule extends MdParsingRule with MapOne {
     if (m < lines.length) getTableRow(lines(m), m) map (l => (m + 1, MdTableRow(l)))
     else None
   }
-
 
   protected def getNextCellItem(string: String) = nextCellRegex.findFirstIn(string) map { mtch =>
     (mtch, string.stripPrefix(mtch))
