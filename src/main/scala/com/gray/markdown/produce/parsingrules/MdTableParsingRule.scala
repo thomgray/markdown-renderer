@@ -20,7 +20,10 @@ object MdTableParsingRule extends MdParsingRule with MapOne {
       headers = getTableRowRecursive(headerString, marker)
       colNumber = headers.length
       colScheme <- getTableColumnScheme(lines(marker + 1))
-      (lastLine, tableData) = getTableData(lines, marker + 2)
+      (lastLine, tableData) <- getTableData(lines, marker + 2) match {
+        case (_, Nil) => None
+        case other => Some(other)
+      }
     } yield {
       val location = MdLocation(marker, lastLine)
       val table = MdTable(headers, tableData.toList, colScheme, location)
