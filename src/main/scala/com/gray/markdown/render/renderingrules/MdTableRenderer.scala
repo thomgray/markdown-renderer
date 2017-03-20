@@ -26,18 +26,7 @@ object MdTableRenderer extends MdParagraphRenderer {
                  ): AttributedString = {
 
     val renderedRows = renderTableData(mdTable, width, linkRefs, renderer)
-//    val colNumbers = mdTable.headers.length
-//    val columns = getColumns(mdTable)
-//    val colStrings = columns.map(_.map(renderer(_, -1, linkRefs)))
-//    val colWidths = colStrings.map(_.foldLeft(0)((w,c) => if (c.string.length > w) c.string.length else w))
-//    val colStringsPadded = (0 until colNumbers).toList.map(i => {
-//      val column = colStrings(i)
-//      val width = colWidths(i)
-//      column.map(_.padToLength(width, ' '))
-//    })
-    val res = drawTableBoxes(renderedRows).reduce(_+ newLine +_)
-    println(res)
-    res
+    drawTableBoxes(renderedRows).reduce(_+ newLine +_)
   }
 
   def renderTableData(table: MdTable, width: Int, linkRefs: List[MdLinkReference], renderer: (MdParagraph, Int, List[MdLinkReference]) => AttributedString) = {
