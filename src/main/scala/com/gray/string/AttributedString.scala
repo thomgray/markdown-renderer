@@ -90,7 +90,8 @@ class AttributedString(val string: String, val attributes: AttributeList) extend
 
       }
     }
-    wrapRecursive(this, None)
+    if (width > 0) wrapRecursive(this, None)
+    else this
   }
 
   private def wrapRegex(width: Int) = s"""^.{0,${width - 1}}(\\s|_|-|$$)""".r
