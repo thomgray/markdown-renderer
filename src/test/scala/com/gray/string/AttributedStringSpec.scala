@@ -92,5 +92,13 @@ class AttributedStringSpec extends FlatSpec with Matchers with AnsiColor with Im
     )
   }
 
+  "padTo" should "pad a string to the desired length" in {
+    val str = AttributedString("one")
+    val res = str.padToLength(10, ' ').string shouldBe "one       "
+  }
+
+  it should "do nothing if the pad length is less than the string length" in {
+    AttributedString("hello").padToLength(3, ' ').string shouldBe "hello"
+  }
 
 }

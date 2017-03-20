@@ -132,6 +132,19 @@ class AttributedString(val string: String, val attributes: AttributeList) extend
     recSplit(this, Nil)
   }
 
+
+  def padToLength(length: Int, char: Char, formats: Option[Format] = None): AttributedString = {
+    val difference = length - this.length
+    if (difference > 0) {
+      val extraBit = "".padTo(difference, char)
+      val extraAttributed = formats match {
+        case Some(f) => AttributedString(extraBit) << f
+        case None => AttributedString(extraBit)
+      }
+      this + extraAttributed
+    } else this
+  }
+
 }
 
 object AttributedString {

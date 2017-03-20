@@ -27,7 +27,8 @@ trait StringFormatting extends MdRegexes with MapOne {
 
 
   def wrapStringToWidth(string: String, width: Int, wrapPrefix: String = "", wrapSuffix: String = "") = {
-    string.split("\n").map(wrapSingleLine(_, width, wrapPrefix, wrapSuffix)).mkString("\n")
+    if (width > 0) string.split("\n").map(wrapSingleLine(_, width, wrapPrefix, wrapSuffix)).mkString("\n")
+    else string
   }
 
   protected def wrapSingleLine(singleLine: String, width: Int, wrapPrefix: String, wrapSuffix: String): String = {
