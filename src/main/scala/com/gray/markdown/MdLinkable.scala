@@ -15,7 +15,6 @@ trait MdLinkable {
         case None =>
           MdRegexes.urlRegex.findFirstIn(string) match {
             case Some(url) =>
-              println(s"Matched with url: $url")
               val removeIt = string.replaceAllLiterally(url, "")
               extractLinksRecursive(removeIt, MdLink(url, None) +: soFar)
             case None =>

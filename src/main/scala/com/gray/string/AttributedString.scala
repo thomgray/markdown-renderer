@@ -61,7 +61,8 @@ class AttributedString(val string: String, val attributes: AttributeList) extend
 
   def toUpperCase() = new AttributedString(string.toUpperCase, attributes)
 
-  def wrapToWidth(width: Int, wrapPrefix: Option[AttributedString] = None, wrapSuffix: Option[AttributedString] = None) = {
+  def wrapToWidth(width: Int, wrapPrefix: Option[AttributedString] = None, wrapSuffix: Option[AttributedString] = None): AttributedString = {
+    if (width < 1) return this
     val regex = wrapRegex(width)
     def wrapRecursive(toWrap: AttributedString, wrapTo: Option[AttributedString]): AttributedString = {
       if (toWrap.length <= width) { // can end here if the string is within the wrap length
@@ -90,8 +91,7 @@ class AttributedString(val string: String, val attributes: AttributeList) extend
 
       }
     }
-    if (width > 0) wrapRecursive(this, None)
-    else this
+    wrapRecursive(this, None)
   }
 
   private def wrapRegex(width: Int) = s"""^.{0,${width - 1}}(\\s|_|-|$$)""".r
