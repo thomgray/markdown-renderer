@@ -1,12 +1,11 @@
 package com.gray.markdown.render
 
 import com.gray.markdown._
-import com.gray.markdown.produce.MdCodeColouring
 import com.gray.markdown.render.renderingrules._
 import com.gray.markdown.render.rendertools.StringFormatting
 import com.gray.string.AttributedString
 
-trait MdRenderer extends StringFormatting with MdCodeColouring {
+trait MdRenderer extends StringFormatting {
 
   val defaultRenderers = List(
     MdStringRenderer,
