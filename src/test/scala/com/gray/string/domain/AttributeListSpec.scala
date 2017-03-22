@@ -60,6 +60,13 @@ class AttributeListSpec extends FlatSpec with Matchers with AnsiColor with Impli
     list.attributes shouldBe Seq(Attribute(RED, 0, 10))
   }
 
+  it should "overwrite conflicting attributes" in {
+    val red = Attribute(RED, 0, 4)
+    val blue = Attribute(BLUE, 0, 4)
+    val list = AttributeList(red)
+    (list + blue).attributes shouldBe Seq(blue)
+  }
+
   "mergePart" should "add an attribute if it doesn't interfere with any existing" in {
     val list = AttributeList(a1)
     list.mergePart(a3) shouldBe Seq(a1, a3)
@@ -72,6 +79,13 @@ class AttributeListSpec extends FlatSpec with Matchers with AnsiColor with Impli
     val expected3 = Attribute(CYAN_B, 10,15)
 
     list.mergePart(a4) shouldBe Seq(expected1, expected2, expected3)
+  }
+
+  it should "overwrite conflicting attributes" in {
+    val list = AttributeList(Attribute(RED, 0,2))
+    val blue = Attribute(BLUE, 0,2)
+    val result = list.mergePart(blue)
+    result shouldBe Seq(blue)
   }
 
   "stitchContinuous" should "do nothing to a non-continuous list" in {

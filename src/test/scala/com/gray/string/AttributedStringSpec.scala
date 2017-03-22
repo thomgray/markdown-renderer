@@ -101,4 +101,21 @@ class AttributedStringSpec extends FlatSpec with Matchers with AnsiColor with Im
     AttributedString("hello").padToLength(3, ' ').string shouldBe "hello"
   }
 
+  "<<" should "overwrite any conflicting attributes" in {
+    val as = AttributedString("hello", AnsiColor.RED)
+    val blue = Format(Some(AnsiColor.BLUE))
+    val newString = as << blue
+    val newAtts = newString.attributes.attributes
+    newAtts.length shouldBe 1
+    newAtts.head shouldBe Attribute(blue, 0, 5)
+  }
+
+  "<" should "overwrite any conflicting attributes" in {
+    val as = AttributedString("hello", AnsiColor.RED)
+    val blue = Attribute(Format(Some(AnsiColor.BLUE)), 0, 5)
+    val newString = as < blue
+    val newAtts = newString.attributes.attributes
+    newAtts.length shouldBe 1
+    newAtts.head shouldBe blue
+  }
 }

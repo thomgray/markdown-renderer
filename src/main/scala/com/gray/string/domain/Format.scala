@@ -9,13 +9,13 @@ case class Format(foreground: Option[String] = None,
 
   def +(format: Format) = {
     val newForeground = (foreground, format.foreground) match {
-      case (Some(f), _) => Some(f)
       case (_, Some(f)) => Some(f)
+      case (Some(f), _) => Some(f)
       case _ => None
     }
     val newBackground = (background, format.background) match {
-      case (Some(f), _) => Some(f)
       case (_, Some(f)) => Some(f)
+      case (Some(f), _) => Some(f)
       case _ => None
     }
     val newOthers = (other, format.other) match {
