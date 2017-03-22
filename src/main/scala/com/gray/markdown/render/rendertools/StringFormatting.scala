@@ -10,13 +10,13 @@ import scala.io.AnsiColor
 
 trait StringFormatting extends MdRegexes with MapOne {
   protected val codeBackgroundFormat = Format(background = Some(AnsiColor.BLACK_B))
+  protected val plainCodeFormat = Format(Some(AnsiColor.WHITE), Some(AnsiColor.BLACK_B))
   protected val newParagraph = AttributedString("\n\n")
   protected val newLine = AttributedString("\n")
   protected val indent = AttributedString("     ")
 
   protected val urlFormat = Format(foreground = Some(AnsiColor.BLUE))
 
-  private val emptyCodeSpace = AttributedString(" ") << codeBackgroundFormat
 
 
   private def wrapRegex(width: Int) = s"""^.{0,${width - 1}}(\\s|_|-|$$)""".r
@@ -91,7 +91,7 @@ trait StringFormatting extends MdRegexes with MapOne {
       case Some(mtch) =>
         val before = attributedString.subString(end = mtch.start)
         val after = attributedString.subString(mtch.end)
-        val bit = attributedString.subString(mtch.start + 1, mtch.end - 1) << codeBackgroundFormat
+        val bit = attributedString.subString(mtch.start + 1, mtch.end - 1) << plainCodeFormat
         applyInlineCodeFormat(before + bit + after)
     }
   }
@@ -132,12 +132,12 @@ trait StringFormatting extends MdRegexes with MapOne {
       string < Attribute(urlFormat, mtch.start, mtch.end)
     }
 
-  def colourBackground(attributedString: AttributedString, width: Int) = {
-    val extraLine = AttributedString(concatenate(" ", width)) << codeBackgroundFormat
-    val lines = attributedString.split("\n")
-    val block = blockify(lines, width - 2).map(l => emptyCodeSpace + (l << codeBackgroundFormat) + emptyCodeSpace)
-    (extraLine +: block :+ extraLine).reduce(_ + newLine + _)
-  }
+//  def colourBackground(attributedString: AttributedString, width: Int) = {
+//    val extraLine = AttributedString(concatenate(" ", width)) << codeBackgroundFormat
+//    val lines = attributedString.split("\n")
+//    val block = blockify(lines, width - 2).map(l => emptyCodeSpace + (l << codeBackgroundFormat) + emptyCodeSpace)
+//    (extraLine +: block :+ extraLine).reduce(_ + newLine + _)
+//  }
 
   def drawBoxAround(attributedString: AttributedString) = {
     val lines = attributedString.split("\n")

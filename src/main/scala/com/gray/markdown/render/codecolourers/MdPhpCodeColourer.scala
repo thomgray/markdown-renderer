@@ -3,22 +3,31 @@ import com.gray.string.AttributedString
 
 object MdPhpCodeColourer extends MdCodeColouring {
 
-  val protectedWords = """\b(public|private|function|class|return|if|else|break|case|switch|;|,)\b""".r
+  val protectedWords =
+    """\b(public|private|function|class|extends|return|for|foreach|as|if|else|break|case|switch)\b|;|,""".r
   val variables = """\$\w+""".r
 
   override def colourCode(string: AttributedString): AttributedString = {
     val plainString = string.string
-    val commented = (COMMENT_REGEX_HASH.findAllMatchIn(plainString) ++
-      COMMENT_REGEX_SLASH.findAllMatchIn(plainString)).toSeq
-    val strings = QUOTED_REGEX.findAllMatchIn(plainString).toSeq
+    val comments =
+    COMMENT_REGEX_HASH.findAllMatchIn(plainString).toSeq ++ COMMENT_REGEX_SLASH.findAllMatchIn(plainString)
+    val strings =
+    QUOTED_REGEX.findAllMatchIn(plainString).toSeq ++ QUOTED_SINGLE_REGEX.findAllMatchIn(plainString)
 
-    val nonCode = commented ++ strings
+    val classNameRegex = """(?<=class )\s*\w+""".r
+    val functionNameRegex = """(?<=function )\s*\w+""".r
+    val functionInlineRegex = """(?:(?<=->)|(?<=::))\w+ {0,1}(?=\()""".r
 
-    applyFormat(COMMENTED, commented, string) |
-      (applyFormatExcludingMatches(GREEN, strings, _, commented)) |
-      (applyFormatExcludingMatches(BOLD_RED, protectedWords, _, commented)) |
+    val nonCode = comments ++ strings
+
+    applyFormat(COMMENTED, comments, string) |
+      (applyFormatExcludingMatches(GREEN, strings, _, comments)) |
+      (applyFormatExcludingMatches(BOLD_RED, protectedWords, _, comments)) |
       (applyFormatExcludingMatches(BOLD_BLUE, variables.findAllMatchIn(plainString).toSeq, _, nonCode)) |
       (applyFormatExcludingMatches(RED, "<\\?(php)?".r, _, nonCode)) |
+      (applyFormatExcludingMatches(BOLD_YELLOW, classNameRegex, _, nonCode)) |
+      (applyFormatExcludingMatches(BOLD_YELLOW, functionNameRegex, _, nonCode)) |
+      (applyFormatExcludingMatches(BOLD_YELLOW, functionInlineRegex, _, nonCode)) |
       (applyFormatExcludingMatches(RED, "\\?>".r, _, nonCode))
   }
 }

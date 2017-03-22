@@ -3,6 +3,9 @@ package com.gray.markdown.render.renderingrules
 import com.gray.markdown.render.codecolourers._
 import com.gray.markdown.{MdCode, MdLinkReference, MdParagraph}
 import com.gray.string.AttributedString
+import com.gray.string.domain.Format
+
+import scala.io.AnsiColor
 
 object MdCodeRenderer extends MdParagraphRenderer {
 
@@ -12,17 +15,27 @@ object MdCodeRenderer extends MdParagraphRenderer {
                       renderer: (MdParagraph, Int, List[MdLinkReference]) => AttributedString
                      ): Option[AttributedString] = mdParagraph match {
     case MdCode(string, language, _) =>
-      val codeString = colourCode(string, language).wrapToWidth(width-2)
+      val whiteString = AttributedString(string)
+      val codeString = colourCode(whiteString, language).wrapToWidth(width-2) << Format(Some(AnsiColor.WHITE))
       colourBackground(codeString, width) | Some.apply
     case _ => None
   }
 
-  def colourCode(string: String, languageOpt: Option[String]) = {
+  def colourCode(string: AttributedString, languageOpt: Option[String]) = {
     languageOpt match {
       case Some(language) if codeColourers.contains(language) =>
-        codeColourers(language).colourCode(AttributedString(string))
-      case _ => AttributedString(string)
+        codeColourers(language).colourCode(string)
+      case _ => string
     }
+  }
+
+  private val emptyCodeSpace = AttributedString(" ") << codeBackgroundFormat
+
+  def colourBackground(attributedString: AttributedString, width: Int) = {
+    val extraLine = AttributedString(concatenate(" ", width)) << codeBackgroundFormat
+    val lines = attributedString.split("\n")
+    val block = blockify(lines, width - 2).map(l => emptyCodeSpace + (l << codeBackgroundFormat) + emptyCodeSpace)
+    (extraLine +: block :+ extraLine).reduce(_ + newLine + _)
   }
 
   val codeColourers: Map[String, MdCodeColouring] = Map(

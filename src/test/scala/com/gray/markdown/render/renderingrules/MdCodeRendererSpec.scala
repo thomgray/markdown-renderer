@@ -41,12 +41,19 @@ class MdCodeRendererSpec extends FlatSpec with ImplicitConversions with AnsiColo
   it should "colour the background black" in {
     val code = MdCode("some code", None, noLocation)
     val actual = renderCode(code, 20)
-    val expectedStr =
-      """|                    |
-        | some code          |
-        |                    |""".stripMargin.replaceAll("\\|", "")
-    val expected = expectedStr.split("\n").map(AttributedString(_) << BLACK_B).reduce(_+newLine+_)
-    actual shouldBe expected
+    actual.attributes.attributes.foreach(_.format.background shouldBe Some(AnsiColor.BLACK_B))
+  }
+
+  it should "colour the foreground white" in {
+    val code = MdCode("some code", None, noLocation)
+    val actual = renderCode(code, 20)
+    val actualString = actual.string
+    actual.attributes.attributes.foreach(at => {
+      val (s,e) = at.range
+      if (actualString.substring(s,e).matches(".*\\w.*")) {
+        at.format.foreground shouldBe Some(AnsiColor.WHITE)
+      }
+    })
   }
 
 }

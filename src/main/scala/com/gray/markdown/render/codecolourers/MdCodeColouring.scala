@@ -14,6 +14,7 @@ trait MdCodeColouring extends MapOne {
   protected val BLUE = Format(Some(AnsiColor.BLUE))
   protected val WHITE = Format(Some(AnsiColor.WHITE))
   protected val GREEN = Format(Some(AnsiColor.GREEN))
+  protected val MAGENTA = Format(Some(AnsiColor.MAGENTA))
 
   protected val BOLD_RED = Format(foreground = Some(AnsiColor.RED), other = Some(List(AnsiColor.BOLD)))
   protected val BOLD_YELLOW = Format(foreground = Some(AnsiColor.YELLOW), other = Some(List(AnsiColor.BOLD)))
@@ -25,6 +26,7 @@ trait MdCodeColouring extends MapOne {
   val COMMENT_REGEX_HASH = "#.*".r
 
   val QUOTED_REGEX = """\".*?(?<!\\)\"""".r
+  val QUOTED_SINGLE_REGEX = """\'.*?(?<!\\)\'""".r
 
   protected def applyFormat(format: Format, regex: Regex, string: AttributedString) = {
     regex.findAllMatchIn(string.string).foldLeft(string)((s, m) => {

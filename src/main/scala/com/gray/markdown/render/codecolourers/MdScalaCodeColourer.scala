@@ -11,6 +11,8 @@ object MdScalaCodeColourer extends MdCodeColouring {
 
   val protectedWords = """\b(def|val|var|for|if|do|match|class|case|object|this|package|trait|sealed|final|abstract|protected|import)\b""".r
 
+  val punctuation = """\.|;|,""".r
+
   val defsRegex = """(?<=def ) *[a-zA-Z][a-zA-z0-9_\-+*]*""".r
 
   override def colourCode(string: AttributedString): AttributedString = {
@@ -26,6 +28,7 @@ object MdScalaCodeColourer extends MdCodeColouring {
       (applyFormatExcludingMatches(GREEN, singleQuoteMatches, _, tripleQuoteMatches ++ commentedMatches)) |
       (applyFormatExcludingMatches(BOLD_RED, protectedWords, _, nonCode)) |
       (applyFormatExcludingMatches(BOLD_YELLOW, defsRegex, _, nonCode)) |
+      (applyFormatExcludingMatches(MAGENTA, punctuation, _, nonCode)) |
       (applyFormatExcludingMatches(Format(foreground = Some(AnsiColor.CYAN)), "\\b\\d+\\b".r, _, nonCode))
   }
 
