@@ -9,14 +9,16 @@ import scala.io.AnsiColor
 
 object MdCodeRenderer extends MdParagraphRenderer {
 
+  private val WHITE_FOREGROUND = Format(Some(AnsiColor.WHITE))
+
   override def render(mdParagraph: MdParagraph,
                       width: Int,
                       linkRefs: List[MdLinkReference],
                       renderer: (MdParagraph, Int, List[MdLinkReference]) => AttributedString
                      ): Option[AttributedString] = mdParagraph match {
     case MdCode(string, language, _) =>
-      val whiteString = AttributedString(string)
-      val codeString = colourCode(whiteString, language).wrapToWidth(width-2) << Format(Some(AnsiColor.WHITE))
+      val whiteString = AttributedString(string) << WHITE_FOREGROUND
+      val codeString = colourCode(whiteString, language).wrapToWidth(width-2)
       colourBackground(codeString, width) | Some.apply
     case _ => None
   }
